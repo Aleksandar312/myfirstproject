@@ -12,60 +12,60 @@ routes = {
     "България → Англия": ["София", "Виена", "Париж", "Лондон"]
 }
 
-# Реални хотели + снимки
+# Реални хотели + стабилни снимки (Unsplash)
 city_info = {
     "София": {
         "hotel": "Hotel Anel",
         "price": 90,
-        "image": "https://www.hotelanel.com/images/gallery/hotel-anel-sofia.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,sofia",
         "sight": "Катедралата Александър Невски"
     },
     "Белград": {
         "hotel": "Hotel Moskva",
         "price": 85,
-        "image": "https://www.hotelmoskva.rs/images/gallery/hotel-moskva-belgrade.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,belgrade",
         "sight": "Калемегдан"
     },
     "Виена": {
         "hotel": "Austria Trend Hotel Savoyen",
         "price": 110,
-        "image": "https://www.austria-trend.at/fileadmin/user_upload/Hotels/Savoyen/hotel-savoyen-vienna.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,vienna",
         "sight": "Дворецът Шьонбрун"
     },
     "Мюнхен": {
         "hotel": "Maritim Hotel München",
         "price": 105,
-        "image": "https://www.maritim.com/fileadmin/user_upload/hotels/muenchen/exterior.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,munich",
         "sight": "Мариенплац"
     },
     "Париж": {
-        "hotel": "Hôtel Pullman Paris Tour Eiffel",
+        "hotel": "Pullman Paris Tour Eiffel",
         "price": 140,
-        "image": "https://www.pullmanpariseiffel.com/wp-content/uploads/sites/61/2021/06/pullman-paris-eiffel-tower.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,paris",
         "sight": "Айфеловата кула"
     },
     "Рим": {
         "hotel": "Hotel Quirinale",
         "price": 120,
-        "image": "https://www.hotelquirinale.it/images/gallery/hotel-quirinale-rome.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,rome",
         "sight": "Колизеумът"
     },
     "Милано": {
         "hotel": "Hotel Berna",
         "price": 110,
-        "image": "https://www.hotelberna.com/images/gallery/hotel-berna-milan.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,milan",
         "sight": "Катедралата Дуомо"
     },
     "Лондон": {
         "hotel": "Park Plaza Westminster Bridge",
         "price": 150,
-        "image": "https://www.parkplaza.com/parkplazawestminsterbridge/images/gallery/exterior.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,london",
         "sight": "Биг Бен"
     },
     "Скопие": {
         "hotel": "Hotel Alexandar Square",
         "price": 75,
-        "image": "https://www.alexandarsquare.com/images/gallery/hotel.jpg",
+        "image": "https://source.unsplash.com/800x500/?hotel,skopje",
         "sight": "Каменният мост"
     }
 }
@@ -145,7 +145,7 @@ if st.button("Планирай пътуването 🧭"):
     st.subheader("🗺️ Маршрут")
     st.write(" ➡️ ".join(cities))
 
-    # ================== MAP (само точки) ==================
+    # ================== MAP ==================
     map_data = [{"lat": city_coordinates[c][0], "lon": city_coordinates[c][1]} for c in cities]
     st.map(pd.DataFrame(map_data))
 
