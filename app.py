@@ -1,35 +1,6 @@
 import streamlit as st
 from abc import ABC, abstractmethod
 import pandas as pd
-from PIL import Image, ImageDraw, ImageFont
-import io
-import random
-
-# ================== IMAGE GENERATOR ==================
-
-def generate_hotel_image(city, hotel_name, seed):
-    random.seed(seed)
-    img = Image.new("RGB", (800, 450), (
-        random.randint(100, 180),
-        random.randint(100, 180),
-        random.randint(100, 180)
-    ))
-    draw = ImageDraw.Draw(img)
-
-    try:
-        font_big = ImageFont.truetype("arial.ttf", 40)
-        font_small = ImageFont.truetype("arial.ttf", 26)
-    except:
-        font_big = font_small = ImageFont.load_default()
-
-    draw.text((30, 40), hotel_name, fill="white", font=font_big)
-    draw.text((30, 100), f"📍 {city}", fill="white", font=font_small)
-    draw.text((30, 160), "Luxury Hotel Experience", fill="white", font=font_small)
-
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    return buf
 
 # ================== DATA ==================
 
@@ -44,12 +15,12 @@ routes = {
 city_info = {
     "София": ("Hotel Anel", 90, "Катедралата Александър Невски"),
     "Белград": ("Hotel Moskva", 85, "Калемегдан"),
-    "Виена": ("Hotel Savoyen", 110, "Дворецът Шьонбрун"),
-    "Мюнхен": ("Maritim Hotel", 105, "Мариенплац"),
-    "Париж": ("Pullman Paris", 140, "Айфеловата кула"),
+    "Виена": ("Austria Trend Hotel Savoyen", 110, "Дворецът Шьонбрун"),
+    "Мюнхен": ("Maritim Hotel München", 105, "Мариенплац"),
+    "Париж": ("Hôtel Pullman Paris Tour Eiffel", 140, "Айфеловата кула"),
     "Рим": ("Hotel Quirinale", 120, "Колизеумът"),
     "Милано": ("Hotel Berna", 110, "Катедралата Дуомо"),
-    "Лондон": ("Park Plaza Westminster", 150, "Биг Бен"),
+    "Лондон": ("Park Plaza Westminster Bridge", 150, "Биг Бен"),
     "Скопие": ("Hotel Alexandar Square", 75, "Каменният мост")
 }
 
@@ -78,11 +49,9 @@ DISTANCE_BETWEEN_CITIES = 300
 class Transport(ABC):
     def __init__(self, price_per_km):
         self.price_per_km = price_per_km
-
     @abstractmethod
     def name(self):
         pass
-
     def travel_cost(self, distance):
         return distance * self.price_per_km
 
@@ -121,42 +90,52 @@ if st.button("Планирай пътуването 🧭"):
     st.subheader("🗺️ Маршрут")
     st.write(" ➡️ ".join(cities))
 
+    # Карта (точки)
     st.map(pd.DataFrame([{"lat": city_coordinates[c][0], "lon": city_coordinates[c][1]} for c in cities]))
 
-    multiplier = HOTEL_MULTIPLIER[hotel_type]
-    total_hotel_cost = total_food_cost = 0
+    # Хотели и снимки от интернет (Unsplash)
+    total_hotel_cost = 0
+    total_food_cost = 0
     hotel_breakdown = {}
+    multiplier = HOTEL_MULTIPLIER[hotel_type]
 
     st.subheader("🏨 Хотелски обяви")
 
     for city in cities:
         hotel, base_price, sight = city_info[city]
-        price = base_price * multiplier
-        total = price * days
+        price_per_night = base_price * multiplier
+        hotel_total = price_per_night * days
 
-        st.markdown(f"### 📍 {city}")
+        st.markdown(f"### 📍 {city} — {hotel}")
+
+        # снимки от Unsplash (реални хотели/град):
+        img1 = f"https://source.unsplash.com/800x450/?{city},hotel"
+        img2 = f"https://source.unsplash.com/800x450/?{hotel.replace(' ', '')},hotel"
+        img3 = f"https://source.unsplash.com/800x450/?{city},hotel,building"
+
         cols = st.columns(3)
+        cols[0].image(img1, use_column_width=True)
+        cols[1].image(img2, use_column_width=True)
+        cols[2].image(img3, use_column_width=True)
 
-        for i, col in enumerate(cols):
-            with col:
-                img = generate_hotel_image(city, hotel, i)
-                st.image(img, use_container_width=True)
+        st.write(f"💲 Цена: **{price_per_night:.2f} лв/нощ** ({hotel_type})")
+        st.write(f"🏛️ Забележителност: {sight}")
 
-        st.write(f"🏨 **{hotel}** ({hotel_type})")
-        st.write(f"⭐ Рейтинг: {'⭐' * 4}☆")
-        st.write(f"💲 {price:.2f} лв / нощ")
-        st.write(f"🏛️ {sight}")
-        st.button(f"Резервирай в {hotel}", key=city)
+        # бутон „Резервирай“
+        if st.button(f"Резервирай в {hotel}", key=f"book_{city}"):
+            st.success(f"🧳 Резервирано! ({hotel}, {city})")
 
-        hotel_breakdown[city] = total
-        total_hotel_cost += total
+        hotel_breakdown[city] = hotel_total
+        total_hotel_cost += hotel_total
         total_food_cost += 25 * days
 
-    transport_cost = transport.travel_cost(DISTANCE_BETWEEN_CITIES * (len(cities) - 1))
+    total_distance = DISTANCE_BETWEEN_CITIES * (len(cities) - 1)
+    transport_cost = transport.travel_cost(total_distance)
     total_cost = transport_cost + total_food_cost + total_hotel_cost
 
+    # Резултати
     st.subheader("💰 Разходи")
-    st.write(f"{transport.name()}: {transport_cost:.2f} лв")
+    st.write(f"{transport.name()} – {transport_cost:.2f} лв")
     st.write(f"🍽️ Храна: {total_food_cost:.2f} лв")
     st.write(f"🏨 Хотели: {total_hotel_cost:.2f} лв")
 
