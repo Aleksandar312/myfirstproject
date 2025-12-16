@@ -60,7 +60,6 @@ city_info = {
     }
 }
 
-# Координати за картата
 city_coordinates = {
     "София": (42.6977, 23.3219),
     "Белград": (44.7866, 20.4489),
@@ -73,7 +72,7 @@ city_coordinates = {
     "Скопие": (41.9973, 21.4280)
 }
 
-DISTANCE_BETWEEN_CITIES = 300
+DISTANCE_BETWEEN_CITIES = 300  # км (опростено)
 
 # ================== OOP ==================
 
@@ -125,7 +124,13 @@ budget = st.number_input("Твоят бюджет (лв):", 300, 5000, 1500)
 if st.button("Планирай пътуването 🧭"):
     cities = routes[route_choice]
 
-    transport = Car() if transport_choice == "Кола" else Train() if transport_choice == "Влак" else Plane()
+    # Избор на транспорт
+    if transport_choice == "Кола":
+        transport = Car()
+    elif transport_choice == "Влак":
+        transport = Train()
+    else:
+        transport = Plane()
 
     st.subheader("🗺️ Маршрут")
     st.write(" ➡️ ".join(cities))
@@ -146,30 +151,42 @@ if st.button("Планирай пътуването 🧭"):
 
     total_food_cost = 0
     total_hotel_cost = 0
+    hotel_costs_per_city = {}
 
     for city in cities:
         info = city_info[city]
+
         st.markdown(f"### 📍 {city}")
-        st.write(f"🏨 {info['hotel'][0]} – {info['hotel'][1]} лв/нощ")
-        st.write(f"🍽️ {info['food'][0]} – {info['food'][1]} лв/ден")
-        st.write(f"🏛️ {info['sight']}")
+        st.write(f"🏨 **Хотел:** {info['hotel'][0]} – {info['hotel'][1]} лв/нощ")
+        st.write(f"🍽️ **Храна:** {info['food'][0]} – {info['food'][1]} лв/ден")
+        st.write(f"🏛️ **Забележителност:** {info['sight']}")
+
+        hotel_total = info['hotel'][1] * days
+        hotel_costs_per_city[city] = hotel_total
 
         total_food_cost += info['food'][1] * days
-        total_hotel_cost += info['hotel'][1] * days
+        total_hotel_cost += hotel_total
 
+    # ================== COST CALCULATION ==================
     total_distance = DISTANCE_BETWEEN_CITIES * (len(cities) - 1)
     transport_cost = transport.travel_cost(total_distance)
     total_cost = transport_cost + total_food_cost + total_hotel_cost
 
+    # ================== RESULTS ==================
     st.subheader("💰 Разходи")
-    st.write(f"{transport.name()} – {transport_cost:.2f} лв")
+    st.write(f"{transport.name()} – транспорт: {transport_cost:.2f} лв")
     st.write(f"🍽️ Храна: {total_food_cost:.2f} лв")
-    st.write(f"🏨 Хотели: {total_hotel_cost:.2f} лв")
+    st.write(f"🏨 Хотели (общо): {total_hotel_cost:.2f} лв")
+
+    st.subheader("🏨 Разходи за хотели по градове")
+    for city, cost in hotel_costs_per_city.items():
+        st.write(f"📍 {city}: **{cost:.2f} лв**")
 
     st.markdown("---")
-    st.write(f"## 💵 Общо: **{total_cost:.2f} лв**")
+    st.write(f"## 💵 Общ бюджет за пътуването: **{total_cost:.2f} лв**")
 
-    if total_cost <= budget:
-        st.success("✅ Бюджетът е достатъчен!")
+    difference = budget - total_cost
+    if difference >= 0:
+        st.success(f"💚 Остават ти **{difference:.2f} лв** след пътуването.")
     else:
-        st.error("❌ Бюджетът не достига.")
+        st.error(f"🔴 Не достигат **{abs(difference):.2f} лв** за това пътуване.")
