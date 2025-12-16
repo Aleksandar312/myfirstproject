@@ -1,82 +1,75 @@
 import streamlit as st
-
 from abc import ABC, abstractmethod
+import pandas as pd
 
 # ================== DATA ==================
 
 routes = {
     "България → Германия": ["София", "Белград", "Виена", "Мюнхен"],
-    "България → Франция": ["София", "Виена", "Мюнхен", "Париж"],
-    "България → Италия": ["София", "Виена", "Мюнхен", "Рим", "Милано"],
-    "България → Англия": ["София", "Виена", "Мюнхен", "Лондон"]
+    "България → Франция": ["София", "Белград", "Виена", "Париж"],
+    "България → Италия": ["София", "Скопие", "Рим", "Милано"],
+    "България → Австрия": ["София", "Белград", "Виена"],
+    "България → Англия": ["София", "Виена", "Париж", "Лондон"]
 }
 
 city_info = {
     "София": {
-        "hotel": ("Hotel Anel", 70),
+        "hotel": ("Hotel Sofia Center", 70),
         "food": ("Традиционна българска кухня", 20),
-        "sight": "Катедралата Александър Невски",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/6/6c/Hotel_Anel_Sofia.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/4/48/Hotel_Anel_lobby.jpg"
-        ]
+        "sight": "Катедралата Александър Невски"
     },
     "Белград": {
-        "hotel": ("Hotel Moskva", 65),
+        "hotel": ("Belgrade Inn", 65),
         "food": ("Сръбска скара", 22),
-        "sight": "Калемегдан",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/5/57/Hotel_Moskva_Belgrade.jpg"
-        ]
+        "sight": "Калемегдан"
     },
     "Виена": {
-        "hotel": ("Austria Trend Hotel Savoyen", 90),
+        "hotel": ("Vienna City Hotel", 90),
         "food": ("Виенски шницел", 30),
-        "sight": "Дворецът Шьонбрун",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/7/77/Austria_Trend_Savoyen_Vienna.jpg"
-        ]
+        "sight": "Дворецът Шьонбрун"
     },
     "Мюнхен": {
         "hotel": ("Munich Central Hotel", 95),
         "food": ("Немска кухня", 28),
-        "sight": "Мариенплац",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/2/2a/Munich_Central_Hotel.jpg"
-        ]
+        "sight": "Мариенплац"
     },
     "Париж": {
-        "hotel": ("Pullman Paris Tour Eiffel", 120),
+        "hotel": ("Paris Central Hotel", 110),
         "food": ("Френска кухня", 35),
-        "sight": "Айфеловата кула",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/1/1c/Pullman_Paris_Tour_Eiffel.jpg"
-        ]
+        "sight": "Айфеловата кула"
     },
     "Рим": {
-        "hotel": ("Hotel Quirinale", 110),
-        "food": ("Италианска кухня", 32),
-        "sight": "Колизеум",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/8/81/Hotel_Quirinale_Rome.jpg"
-        ]
+        "hotel": ("Rome Historic Hotel", 100),
+        "food": ("Италианска паста", 32),
+        "sight": "Колизеумът"
     },
     "Милано": {
-        "hotel": ("Hotel Berna", 105),
-        "food": ("Италианска кухня", 30),
-        "sight": "Катедралата Дуомо",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/6/60/Hotel_Berna_Milano.jpg"
-        ]
+        "hotel": ("Milano City Hotel", 105),
+        "food": ("Пица и ризото", 30),
+        "sight": "Катедралата Дуомо"
     },
     "Лондон": {
-        "hotel": ("Park Plaza Westminster Bridge", 130),
-        "food": ("Английска кухня", 35),
-        "sight": "Биг Бен",
-        "image_urls": [
-            "https://upload.wikimedia.org/wikipedia/commons/0/02/Park_Plaza_Westminster_Bridge_London.jpg"
-        ]
+        "hotel": ("London Bridge Hotel", 120),
+        "food": ("Британска кухня", 40),
+        "sight": "Биг Бен"
+    },
+    "Скопие": {
+        "hotel": ("Skopje Plaza", 60),
+        "food": ("Балканска кухня", 20),
+        "sight": "Каменният мост"
     }
+}
+
+city_coordinates = {
+    "София": (42.6977, 23.3219),
+    "Белград": (44.7866, 20.4489),
+    "Виена": (48.2082, 16.3738),
+    "Мюнхен": (48.1351, 11.5820),
+    "Париж": (48.8566, 2.3522),
+    "Рим": (41.9028, 12.4964),
+    "Милано": (45.4642, 9.1900),
+    "Лондон": (51.5074, -0.1278),
+    "Скопие": (41.9973, 21.4280)
 }
 
 DISTANCE_BETWEEN_CITIES = 300  # км (опростено)
@@ -94,23 +87,30 @@ class Transport(ABC):
     def travel_cost(self, distance):
         return distance * self.price_per_km
 
+
 class Car(Transport):
     def __init__(self):
         super().__init__(0.25)
+
     def name(self):
         return "🚗 Кола"
+
 
 class Train(Transport):
     def __init__(self):
         super().__init__(0.18)
+
     def name(self):
         return "🚆 Влак"
+
 
 class Plane(Transport):
     def __init__(self):
         super().__init__(0.45)
+
     def name(self):
         return "✈️ Самолет"
+
 
 # ================== UI ==================
 
@@ -122,34 +122,50 @@ days = st.slider("Брой дни за пътуването:", 1, 10, 4)
 budget = st.number_input("Твоят бюджет (лв):", 300, 5000, 1500)
 
 if st.button("Планирай пътуването 🧭"):
-
     cities = routes[route_choice]
 
-    # Избор на транспорт (полиморфизъм)
-    transport = Car() if transport_choice=="Кола" else Train() if transport_choice=="Влак" else Plane()
+    # Избор на транспорт
+    if transport_choice == "Кола":
+        transport = Car()
+    elif transport_choice == "Влак":
+        transport = Train()
+    else:
+        transport = Plane()
 
     st.subheader("🗺️ Маршрут")
     st.write(" ➡️ ".join(cities))
+
+    # ================== MAP ==================
+    st.subheader("🗺️ Карта на маршрута")
+
+    map_data = []
+    for city in cities:
+        lat, lon = city_coordinates[city]
+        map_data.append({"lat": lat, "lon": lon})
+
+    df = pd.DataFrame(map_data)
+    st.map(df)
 
     # ================== CITY DETAILS ==================
     st.subheader("🏙️ Спирки и предложения")
 
     total_food_cost = 0
     total_hotel_cost = 0
+    hotel_costs_per_city = {}
 
     for city in cities:
         info = city_info[city]
+
         st.markdown(f"### 📍 {city}")
         st.write(f"🏨 **Хотел:** {info['hotel'][0]} – {info['hotel'][1]} лв/нощ")
         st.write(f"🍽️ **Храна:** {info['food'][0]} – {info['food'][1]} лв/ден")
         st.write(f"🏛️ **Забележителност:** {info['sight']}")
 
-        # Покажи всички изображения на хотела
-        for url in info.get("image_urls", []):
-            st.image(url, use_column_width=True)
+        hotel_total = info['hotel'][1] * days
+        hotel_costs_per_city[city] = hotel_total
 
         total_food_cost += info['food'][1] * days
-        total_hotel_cost += info['hotel'][1] * days
+        total_hotel_cost += hotel_total
 
     # ================== COST CALCULATION ==================
     total_distance = DISTANCE_BETWEEN_CITIES * (len(cities) - 1)
@@ -160,12 +176,17 @@ if st.button("Планирай пътуването 🧭"):
     st.subheader("💰 Разходи")
     st.write(f"{transport.name()} – транспорт: {transport_cost:.2f} лв")
     st.write(f"🍽️ Храна: {total_food_cost:.2f} лв")
-    st.write(f"🏨 Хотели: {total_hotel_cost:.2f} лв")
+    st.write(f"🏨 Хотели (общо): {total_hotel_cost:.2f} лв")
+
+    st.subheader("🏨 Разходи за хотели по градове")
+    for city, cost in hotel_costs_per_city.items():
+        st.write(f"📍 {city}: **{cost:.2f} лв**")
 
     st.markdown("---")
-    st.write(f"## 💵 Общ бюджет: **{total_cost:.2f} лв**")
+    st.write(f"## 💵 Общ бюджет за пътуването: **{total_cost:.2f} лв**")
 
-    if total_cost <= budget:
-        st.success("✅ Бюджетът е достатъчен! Приятно пътуване ✨")
+    difference = budget - total_cost
+    if difference >= 0:
+        st.success(f"💚 Остават ти **{difference:.2f} лв** след пътуването.")
     else:
-        st.error("❌ Бюджетът не достига. Помисли за по-евтин транспорт или по-малко дни.")
+        st.error(f"🔴 Не достигат **{abs(difference):.2f} лв** за това пътуване.")
